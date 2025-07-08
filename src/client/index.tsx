@@ -13,13 +13,13 @@ import { nanoid } from "nanoid";
 import { names, type ChatMessage, type Message } from "../shared";
 
 function App() {
-  const [name] = useState(names[Math.floor(Math.random() * names.length)]);
+  const [name, setName] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const { room } = useParams();
 
   const socket = usePartySocket({
     party: "chat",
-    room,
+    room: room || "main",
     onMessage: (evt) => {
       const message = JSON.parse(evt.data as string) as Message;
       if (message.type === "add") {
@@ -69,6 +69,39 @@ function App() {
       }
     },
   });
+
+  if (!name) {
+    return (
+      <div className="chat container">
+        <div className="name-prompt">
+          <h3>Welcome to the Chat!</h3>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const nameInput = e.currentTarget.elements.namedItem(
+                "name",
+              ) as HTMLInputElement;
+              if (nameInput.value.trim()) {
+                setName(nameInput.value.trim());
+              }
+            }}
+          >
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter your name..."
+              className="ten columns my-input-text"
+              autoComplete="off"
+              autoFocus
+            />
+            <button type="submit" className="two columns">
+              Join Chat
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chat container">
@@ -123,7 +156,7 @@ function App() {
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<Navigate to={`/${nanoid()}`} />} />
+      <Route path="/" element={<App />} />
       <Route path="/:room" element={<App />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
